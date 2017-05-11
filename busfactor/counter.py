@@ -63,7 +63,9 @@ def get_last_commit_of(authors):
     for idx, author in enumerate(authors):
         last_date = subprocess.check_output(("git log --author='{}' --pretty=format:'%cd' "
                                              "| head -n1").format(author), shell=True)
-        date_diff = datetime.datetime.strptime(last_date.decode()[:-7], "%a %b %W %H:%M:%S %Y") - datetime.datetime.today()
+        date_diff = (datetime.datetime.today() -
+                     datetime.datetime.strptime(last_date.decode()[:-7],
+                                                "%a %b %W %H:%M:%S %Y"))
         t.add_row([author, date_diff.days])
     return t
 
