@@ -32,6 +32,21 @@ def piechart(total, unique):
     ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
     plt.show()
 
+def plot_topusers(author_commits, author_lastdate):
+    fig, ax = plt.subplots()
+    #import pdb; pdb.set_trace()
+    # Example data
+    y_pos = np.arange(len(author_commits))
+
+    ax.barh(y_pos, author_commits['commits'], align='center',
+            color=[author_lastdate[x] for x in author_commits['author']], ecolor='black')
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(people['author'])
+    ax.invert_yaxis()  # labels read top-to-bottom
+    ax.set_xlabel('Files')
+    ax.set_title('Authors')
+    plt.show()
+
 def topusers(table, top=5):
     # Aggregate by authors
     authorg = table.group_by('author')
@@ -41,33 +56,19 @@ def topusers(table, top=5):
     if top is not None:
         top = top * -1
     people = authorsums[top:]
-    fig, ax = plt.subplots()
-    #import pdb; pdb.set_trace()
-    # Example data
-    y_pos = np.arange(len(people))
 
-    ax.barh(y_pos, people['commits'], align='center',
-            color='green', ecolor='black')
-    ax.set_yticks(y_pos)
-    ax.set_yticklabels(people['author'])
-    ax.invert_yaxis()  # labels read top-to-bottom
-    ax.set_xlabel('Files')
-    ax.set_title('Authors')
-
-    return people['author']
+    return people
 
 def get_last_commit_of(authors):
-    t = Table(names=('authors', 'last seen'), data=[[], []],
-                     dtype=('S100', 'i4'))
-    t.convert_bytestring_to_unicode()
-    for idx, author in enumerate(authors):
+    author_dict = dict()
+    for author in authors:
         last_date = subprocess.check_output(("git log --author='{}' --pretty=format:'%cd' "
                                              "| head -n1").format(author), shell=True)
         date_diff = (datetime.datetime.today() -
                      datetime.datetime.strptime(last_date.decode()[:-7],
                                                 "%a %b %W %H:%M:%S %Y"))
-        t.add_row([author, date_diff.days])
-    return t
+        author_dict[author] = date_diff.days
+    return author_dict
 
 def main():
     files = reduce(lambda l1, l2: l1 + l2,
@@ -87,8 +88,9 @@ def main():
     t.sort(['last date','filename'])
     t.write('{}_critic.txt'.format(sys.argv[1]), format='ascii.fixed_width', overwrite=True)
     piechart(len(files), len(t))
-    table = topusers(t, top=None)
-    author_tab = get_last_commit_of(table)
+    authors_commit = topusers(t, top=None)
+    author_dict = get_last_commit_of(authors_commit['author'])
+    plot_topusers(authors_commit, author_dict)
     print(author_tab)
 
 # What else I want to do?
@@ -96,4 +98,4 @@ def main():
 ## Find last commit from these critic authors (are they still contributing?)
 ## DONE: Plot pie chart with files vs unique // also in lines of code?
 ## DONE: Plot user ranking vs files (lines of code)
-
+## ALOMST DONE:Accept list of files to ignore, e.g.: __init__.py, setup_package.py, ...
