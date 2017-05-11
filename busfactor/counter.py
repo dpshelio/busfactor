@@ -32,11 +32,11 @@ def piechart(total, unique):
 
 
 def topusers(table, top=5):
-
     # Aggregate by authors
     authorg = table.group_by('author')
-    authorsums = authorg.groups.aggregate(np.sum)
+    authorsums = authorg.groups.aggregate(len)
     authorsums.sort(['commits'])
+
     if top is not None:
         top = top * -1
     people = authorsums[top:]
