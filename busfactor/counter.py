@@ -6,6 +6,8 @@ from astropy.table import Table
 from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
+import subprocess
+import datetime
 
 def analyse_file(filename, repo):
 
@@ -30,7 +32,6 @@ def piechart(total, unique):
     ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
     plt.show()
 
-
 def topusers(table, top=5):
     # Aggregate by authors
     authorg = table.group_by('author')
@@ -53,7 +54,18 @@ def topusers(table, top=5):
     ax.set_xlabel('Files')
     ax.set_title('Authors')
 
-    plt.show()
+    return people['author']
+
+def get_last_commit_of(authors):
+    t = Table(names=('authors', 'last seen'), data=[[], []],
+                     dtype=('S100', 'S10'))
+    t.convert_bytestring_to_unicode()
+    for idx, author in enumerate(authors):
+        last_date = subprocess.check_output(("git log --author='{}' --pretty=format:'%cd' "
+                                             "| head -n1").format(author), shell=True)
+        date = datetime.datetime.strptime(last_date.decode(), "%a %b %W %H:%M:%S %Y %z\n")
+        t.add_row([author, "{:%Y-%m-%d}".format(date)])
+    return t
 
 def main():
     files = reduce(lambda l1, l2: l1 + l2,
@@ -73,7 +85,9 @@ def main():
     t.sort(['last date','filename'])
     t.write('{}_critic.txt'.format(sys.argv[1]), format='ascii.fixed_width', overwrite=True)
     piechart(len(files), len(t))
-    topusers(t, top=None)
+    table = topusers(t, top=None)
+    author_tab = get_last_commit_of(table)
+    print(author_tab)
 
 # What else I want to do?
 ## DONE:sort table by date
