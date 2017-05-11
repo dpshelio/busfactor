@@ -5,7 +5,10 @@ import glob
 from astropy.table import Table
 from tqdm import tqdm
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib.colors as colors
 import subprocess
 import datetime
 
@@ -33,18 +36,25 @@ def piechart(total, unique):
     plt.show()
 
 def plot_topusers(author_commits, author_lastdate):
+
+    colors_author = np.array([author_lastdate[x] for x in author_commits['author']])
+    colors_author = colors_author / colors_author.max()
+    norm = colors.Normalize(colors_author.min(), colors_author.max())
+    color = [cm.viridis(norm(ca)) for ca in colors_author]
+
     fig, ax = plt.subplots()
     #import pdb; pdb.set_trace()
     # Example data
     y_pos = np.arange(len(author_commits))
-
+    
     ax.barh(y_pos, author_commits['commits'], align='center',
-            color=[author_lastdate[x] for x in author_commits['author']], ecolor='black')
+            color=color, ecolor='black')
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(people['author'])
+    ax.set_yticklabels(author_commits['author'])
     ax.invert_yaxis()  # labels read top-to-bottom
     ax.set_xlabel('Files')
     ax.set_title('Authors')
+    #cb = mpl.colorbar.ColorbarBase(ax, cmap=cm.viridis, norm=norm, orientation='vertical')
     plt.show()
 
 def topusers(table, top=5):
@@ -91,11 +101,11 @@ def main():
     authors_commit = topusers(t, top=None)
     author_dict = get_last_commit_of(authors_commit['author'])
     plot_topusers(authors_commit, author_dict)
-    print(author_tab)
+    print(author_commit)
 
 # What else I want to do?
 ## DONE:sort table by date
-## Find last commit from these critic authors (are they still contributing?)
+## DONE: Find last commit from these critic authors (are they still contributing?)
 ## DONE: Plot pie chart with files vs unique // also in lines of code?
 ## DONE: Plot user ranking vs files (lines of code)
 ## ALOMST DONE:Accept list of files to ignore, e.g.: __init__.py, setup_package.py, ...
