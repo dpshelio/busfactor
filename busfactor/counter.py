@@ -58,13 +58,15 @@ def topusers(table, top=5):
 
 def get_last_commit_of(authors):
     t = Table(names=('authors', 'last seen'), data=[[], []],
-                     dtype=('S100', 'S10'))
+                     dtype=('S100', 'i4'))
     t.convert_bytestring_to_unicode()
     for idx, author in enumerate(authors):
         last_date = subprocess.check_output(("git log --author='{}' --pretty=format:'%cd' "
                                              "| head -n1").format(author), shell=True)
-        date = datetime.datetime.strptime(last_date.decode(), "%a %b %W %H:%M:%S %Y %z\n")
-        t.add_row([author, "{:%Y-%m-%d}".format(date)])
+        date_diff = (datetime.datetime.today() -
+                     datetime.datetime.strptime(last_date.decode()[:-7],
+                                                "%a %b %W %H:%M:%S %Y"))
+        t.add_row([author, date_diff.days])
     return t
 
 def main():
