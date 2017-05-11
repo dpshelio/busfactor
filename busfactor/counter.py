@@ -56,12 +56,16 @@ def topusers(table, top=5):
     plt.show()
 
 def main():
-    files = reduce(lambda l1, l2: l1 + l2, [glob.glob(sys.argv[1] + "/**/*." + e, recursive=True) for e in ['py', 'f', 'c', 'h', 'pyx']])
+    files = reduce(lambda l1, l2: l1 + l2,
+            [glob.glob(sys.argv[1] + "/**/*." + e, recursive=True)
+                    for e in ['py', 'f', 'c', 'h', 'pyx']])
+    not_wanted = ['__init__.py', 'setup_package.py']
+    files = [f for f in files if f.split('/')[-1] not in not_wanted]
     t = Table([[], [], [], []],
               names=('filename', 'author', 'commits', 'last date'),
               dtype=('S100','S100', 'i4', 'S10' ))
     t.convert_bytestring_to_unicode()
-    for file_i in tqdm(files[:100]):
+    for file_i in tqdm(files):
         row = analyse_file(file_i, git.Repo())
         if row:
             t.add_row([file_i] + row)
