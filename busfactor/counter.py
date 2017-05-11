@@ -6,7 +6,7 @@ from astropy.table import Table
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-def analyse_file(filename):
+def analyse_file(filename, repo):
 
     commits = repo.iter_commits(paths=filename)
 
@@ -29,15 +29,14 @@ def piechart(total, unique):
     ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
     plt.show()
 
-if __name__ == '__main__':
-    repo = git.Repo()
+def main():
     files = reduce(lambda l1, l2: l1 + l2, [glob.glob(sys.argv[1] + "/**/*." + e, recursive=True) for e in ['py', 'f', 'c', 'h', 'pyx']])
     t = Table([[], [], [], []],
               names=('filename', 'author', 'commits', 'last date'),
               dtype=('S100','S100', 'i4', 'S10' ))
     t.convert_bytestring_to_unicode()
     for file_i in tqdm(files):
-        row = analyse_file(file_i)
+        row = analyse_file(file_i, git.Repo())
         if row:
             t.add_row([file_i] + row)
 
