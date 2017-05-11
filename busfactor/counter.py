@@ -36,18 +36,19 @@ def topusers(table, top=5):
     # Aggregate by authors
     authorg = table.group_by('author')
     authorsums = authorg.groups.aggregate(np.sum)
-
+    authorsums.sort(['commits'])
+    if top is not None:
+        top = top * -1
+    people = authorsums[top:]
     fig, ax = plt.subplots()
-
+    #import pdb; pdb.set_trace()
     # Example data
-    people = (name for name in authorg.groups.keys)
-    people = people[:top]
     y_pos = np.arange(len(people))
 
-    ax.barh(y_pos, authorsums[:top], align='center',
+    ax.barh(y_pos, people['commits'], align='center',
             color='green', ecolor='black')
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(people)
+    ax.set_yticklabels(people['author'])
     ax.invert_yaxis()  # labels read top-to-bottom
     ax.set_xlabel('Files')
     ax.set_title('Authors')
@@ -74,5 +75,5 @@ def main():
 ## DONE:sort table by date
 ## Find last commit from these critic authors (are they still contributing?)
 ## DONE: Plot pie chart with files vs unique // also in lines of code?
-## Plot user ranking vs files (lines of code)
+## DONE: Plot user ranking vs files (lines of code)
 
