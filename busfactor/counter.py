@@ -38,15 +38,18 @@ def piechart(total, unique):
 def plot_topusers(author_commits, author_lastdate):
 
     colors_author = np.array([author_lastdate[x] for x in author_commits['author']])
+    colors_author_orig = colors_author
     colors_author = colors_author / colors_author.max()
     norm = colors.Normalize(colors_author.min(), colors_author.max())
     color = [cm.viridis(norm(ca)) for ca in colors_author]
 
-    fig, ax = plt.subplots()
+    fig = plt.figure()
+    ax = fig.add_axes([0.2, 0.2, 0.65, 0.7])
+    #fig, ax = plt.subplots()
     #import pdb; pdb.set_trace()
     # Example data
     y_pos = np.arange(len(author_commits))
-    
+
     ax.barh(y_pos, author_commits['commits'], align='center',
             color=color, ecolor='black')
     ax.set_yticks(y_pos)
@@ -54,7 +57,11 @@ def plot_topusers(author_commits, author_lastdate):
     ax.invert_yaxis()  # labels read top-to-bottom
     ax.set_xlabel('Files')
     ax.set_title('Authors')
-    #cb = mpl.colorbar.ColorbarBase(ax, cmap=cm.viridis, norm=norm, orientation='vertical')
+
+    ax1 = fig.add_axes([0.2, 0.05, 0.65, 0.08])
+    cb1 = mpl.colorbar.ColorbarBase(ax1, cmap=cm.viridis,
+                                    norm=colors.Normalize(colors_author_orig.min()/365., colors_author_orig.max()/365.),
+                                    orientation='horizontal')
     plt.show()
 
 def topusers(table, top=5):
@@ -90,7 +97,7 @@ def main():
               names=('filename', 'author', 'commits', 'last date'),
               dtype=('S100','S100', 'i4', 'S10' ))
     t.convert_bytestring_to_unicode()
-    for file_i in tqdm(files):
+    for file_i in tqdm(files[:300]):
         row = analyse_file(file_i, git.Repo())
         if row:
             t.add_row([file_i] + row)
@@ -109,3 +116,4 @@ def main():
 ## DONE: Plot pie chart with files vs unique // also in lines of code?
 ## DONE: Plot user ranking vs files (lines of code)
 ## ALOMST DONE:Accept list of files to ignore, e.g.: __init__.py, setup_package.py, ...
+## TODO: Set up so it downloads repo (from user/repo in github or URL), and runs it all, and create slide/report
