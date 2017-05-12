@@ -79,11 +79,11 @@ def topusers(table, top=5):
 def get_last_commit_of(authors):
     author_dict = dict()
     for author in authors:
-        last_date = subprocess.check_output(("git log --author='{}' --pretty=format:'%cd' "
+        last_date = subprocess.check_output(("git log --author='{}' --date=iso --pretty=format:'%cd' "
                                              "| head -n1").format(author), shell=True)
         date_diff = (datetime.datetime.today() -
-                     datetime.datetime.strptime(last_date.decode()[:-7],
-                                                "%a %b %W %H:%M:%S %Y"))
+                     datetime.datetime.strptime(last_date.decode()[:19],
+                                                "%Y-%m-%d  %H:%M:%S"))
         author_dict[author] = date_diff.days
     return author_dict
 
@@ -97,7 +97,7 @@ def main():
               names=('filename', 'author', 'commits', 'last date'),
               dtype=('S100','S100', 'i4', 'S10' ))
     t.convert_bytestring_to_unicode()
-    for file_i in tqdm(files[:300]):
+    for file_i in tqdm(files):
         row = analyse_file(file_i, git.Repo())
         if row:
             t.add_row([file_i] + row)
@@ -108,7 +108,7 @@ def main():
     authors_commit = topusers(t, top=None)
     author_dict = get_last_commit_of(authors_commit['author'])
     plot_topusers(authors_commit, author_dict)
-    print(author_commit)
+    print(authors_commit)
 
 # What else I want to do?
 ## DONE:sort table by date
