@@ -107,6 +107,10 @@ def get_last_commit_of(authors):
                                                  "| awk -F'<' '{print $1}'| head -n1", shell=True)
             # it comes with a `\n` - why??
             author_git = author_git.strip().decode()
+
+            # check if this name returns anything, if not use previous name
+            if author_git == '':
+                author_git = author
         last_date = subprocess.check_output(("git log --use-mailmap --author='{}' --date=iso --pretty=format:'%cd' "
                                              "| head -n1").format(author_git), shell=True)
         date_diff = (datetime.datetime.today() -
